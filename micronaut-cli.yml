@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: com.jaga.blockchain
+testFramework: kotest
+sourceLanguage: kotlin
+buildTool: gradle_kotlin
+features: [ annotation-api, app-name, data, data-r2dbc, gradle, http-client, kotest, kotlin, kotlin-application, kotlin-build, kotlin-extension-functions, logback, management, micronaut-build, mqtt, netty-server, openapi, postgres, r2dbc, readme, rxjava3, rxjava3-http-client, shade, testcontainers, yaml ]

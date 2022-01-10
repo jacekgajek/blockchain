@@ -1,0 +1,84 @@
+POST http://localhost:8080/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 8"
+}
+###
+POST http://localhost:8080/api/mine-block-zero
+Content-Type: application/json
+
+{
+    "data": "hey 8"
+}
+###
+GET http://localhost:8080/api/block-chain
+
+
+###
+POST http://localhost:8081/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 9"
+}
+###
+GET http://localhost:8081/api/block-chain
+###
+
+
+POST http://localhost:8082/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 10"
+}
+###
+GET http://localhost:8082/api/block-chain
+
+
+###
+POST http://localhost:8083/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 11"
+}
+###
+GET http://localhost:8083/api/block-chain
+###
+POST http://localhost:8083/api/clear
+
+
+###
+POST http://localhost:8084/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 15"
+}
+###
+POST http://localhost:8084/api/clear
+###
+POST http://localhost:8084/api/append-no-validation
+Content-Type: application/json
+
+{
+  "content": {
+    "previousHash": [0,1,2],
+    "data": "hey 8",
+    "timeStamp": 1641222994941,
+    "nonce": 181253
+  },
+  "hash": [0,0,0,0,0,2,3,4]
+}
+
+###
+POST http://localhost:8084/api/mine-block-zero
+Content-Type: application/json
+
+{
+  "data": "hey another"
+}
+###
+GET http://localhost:8084/api/block-chain

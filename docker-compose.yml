@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  mqtt:
+    image: "hivemq/hivemq-ce:2020.5"
+    restart: always
+    ports:
+      - 1883:1883
+  db:
+    image: 'postgres:13.1-alpine'
+    container_name: db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=blockchain_db
+    ports:
+      - "5432:5432"
+  test_db:
+    image: 'postgres:13.1-alpine'
+    container_name: test_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=blockchain_test_db
+    ports:
+      - "5433:5432"

@@ -1,0 +1,22 @@
+micronaut:
+  application:
+    name: blockchain
+  server:
+    port: ${PORT:8080}
+
+r2dbc:
+  datasources:
+    default:
+      url: r2dbc:postgresql://localhost:5432/blockchain_db
+      username: postgres
+      password: 'postgres'
+      schema-generate: CREATE_DROP
+      dialect: POSTGRES
+mqtt:
+  client:
+    server-uri: tcp://localhost:1883
+    client-id: ${random.uuid}
+jaga:
+  blockchain:
+    miner:
+      prefixLength: ${PREFIX_LENGTH:3}
