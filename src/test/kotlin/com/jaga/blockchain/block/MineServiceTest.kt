@@ -40,4 +40,35 @@ class MineServiceTest : FunSpec({
         chain.chain[0].content.data shouldBe "Test 1"
         chain.lastBlock!!.content.data shouldBe "Test 2"
     }
+
+    test("mines valid zero block (multithreaded)") {
+        val block = miner.mineMultiThreaded(null, "Test")
+        shouldNotThrow<Throwable> { miner.verifyAndThrow(null, block) }
+    }
+
+    test("mines valid next block and overwrite whole chain (multithreaded)") {
+        val zero = miner.mineMultiThreaded(null, "Test 1")
+        val block = miner.mineMultiThreaded(zero, "Test 2")
+        shouldNotThrow<Throwable> { miner.verifyAndThrow(null, block) }
+        chain.clear()
+        shouldNotThrow<Throwable> { chain.overwrite(BlockChain(listOf(zero, block)))  }
+        chain.lastBlock shouldNotBe null
+        chain.chain[0].content.data shouldBe "Test 1"
+        chain.lastBlock!!.content.data shouldBe "Test 2"
+    }
+
+    test("mines valid next block and overwrite chain step by step (multithreaded)") {
+        val zero = miner.mineMultiThreaded(null, "Test 1")
+        val block = miner.mineMultiThreaded(zero, "Test 2")
+        chain.clear()
+        chain.lastBlock shouldBe null
+        shouldNotThrow<Throwable> { chain.overwrite(BlockChain(listOf(zero)))  }
+        chain.lastBlock shouldNotBe null
+        chain.lastBlock!!.content.data shouldBe "Test 1"
+        shouldNotThrow<Throwable> { miner.verifyAndThrow(null, block) }
+        shouldNotThrow<Throwable> { chain.overwrite(BlockChain(listOf(zero, block)))  }
+        chain.lastBlock shouldNotBe null
+        chain.chain[0].content.data shouldBe "Test 1"
+        chain.lastBlock!!.content.data shouldBe "Test 2"
+    }
 })

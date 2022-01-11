@@ -2,6 +2,7 @@ package com.jaga.blockchain.block
 
 import com.jaga.blockchain.shared.logger
 import jakarta.inject.Singleton
+import jdk.internal.util.ArraysSupport
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
@@ -9,38 +10,47 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.Closeable
 import java.security.MessageDigest
-import java.util.Arrays
 import java.util.UUID
 import java.util.concurrent.Executors
 
 @Singleton
-class MineService(config: MineServiceConfig) {
+class MineService(config: MineServiceConfig): Closeable {
+    var jobCount: Int = 1
+        set(value) {
+            if (value <= 0) throw IllegalArgumentException()
+            digests = (0 until value).map { MessageDigest.getInstance("SHA-256") }
+            field = value
+        }
+
     private val log = logger(MineService::class.java)
-    private val cores: Int = Runtime.getRuntime().availableProcessors()
     private val digest: MessageDigest = MessageDigest.getInstance("SHA-256")
-    private val digests: List<MessageDigest> = (0 until cores).map { MessageDigest.getInstance("SHA-256") }
     private val prefixLen = config.prefixLen
+    private val dispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
+
+    private lateinit var digests: List<MessageDigest>
+
+    init {
+        jobCount = Runtime.getRuntime().availableProcessors()
+    }
 
     fun mineMultiThreaded(previousBlock: Block?, message: String): Block {
         val content = buildBlockContent(previousBlock, message)
 
         var jobs: List<Job>
         var result: Pair<ByteArray, Long>? = null
-        runBlocking(Executors.newCachedThreadPool().asCoroutineDispatcher()) {
-            log.info { "Starting mining a new block on $cores threads..." }
-            jobs = (0 until cores).map { i ->
+        runBlocking(dispatcher) {
+            log.info { "Starting mining a new block on $jobCount threads..." }
+            jobs = (0 until jobCount).map { i ->
                 launch {
-                    result = dig(content, digests[i], i, cores)
+                    result = dig(content, digests[i], i, jobCount)
                 }
             }
-            while (true) {
+            while (result == null) {
                 delay(1)
-                if (result != null) {
-                    jobs.forEach { it.cancel() }
-                    break
-                }
             }
+            jobs.forEach { it.cancel() }
         }
         val (hash, nonce) = result ?: throw IllegalStateException()
         return Block(content.copy(nonce = nonce), hash)
@@ -69,11 +79,10 @@ class MineService(config: MineServiceConfig) {
         val start = System.currentTimeMillis()
         val buffer = content.toByteBuffer()
         var counter = 0
-        val limit = 100_000
+        val limit = 1_000
 
         do {
             if (counter == limit) {
-
                 currentCoroutineContext().ensureActive()
                 counter = 0
             }
@@ -90,9 +99,8 @@ class MineService(config: MineServiceConfig) {
 
     private val zeroes = ByteArray(prefixLen) { 0 }
 
-    private fun startsWithZeroes(array: ByteArray): Boolean {
-        return Arrays.equals(zeroes, 0, prefixLen, array, 0, prefixLen)
-    }
+    private fun startsWithZeroes(array: ByteArray): Boolean =
+        ArraysSupport.mismatch(zeroes, 0, array, 0, prefixLen) < 0
 
     fun verifyAndThrow(previousBlock: Block?, block: Block) {
         if (!startsWithZeroes(block.hash)) {
@@ -101,5 +109,9 @@ class MineService(config: MineServiceConfig) {
         if (previousBlock != null && !block.content.previousHash.contentEquals(previousBlock.hash)) {
             throw BlockChainValidationFailedException("Proof Of Work unsatisfied – a block does not contain the hash of the previous block.")
         }
+    }
+
+    override fun close() {
+        dispatcher.close()
     }
 }
