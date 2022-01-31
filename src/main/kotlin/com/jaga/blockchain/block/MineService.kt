@@ -2,7 +2,6 @@ package com.jaga.blockchain.block
 
 import com.jaga.blockchain.shared.logger
 import jakarta.inject.Singleton
-import jdk.internal.util.ArraysSupport
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
@@ -12,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.Closeable
 import java.security.MessageDigest
+import java.util.Arrays
 import java.util.UUID
 import java.util.concurrent.Executors
 
@@ -100,7 +100,7 @@ class MineService(config: MineServiceConfig): Closeable {
     private val zeroes = ByteArray(prefixLen) { 0 }
 
     private fun startsWithZeroes(array: ByteArray): Boolean =
-        ArraysSupport.mismatch(zeroes, 0, array, 0, prefixLen) < 0
+        Arrays.mismatch(zeroes, 0, prefixLen, array, 0, prefixLen) < 0
 
     fun verifyAndThrow(previousBlock: Block?, block: Block) {
         if (!startsWithZeroes(block.hash)) {

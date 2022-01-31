@@ -31,22 +31,32 @@ class MineServiceStressTest : FunSpec({
 
 fun main() {
     miner.mineMultiThreaded(null, "Test")
-    miner.mineMultiThreaded(null, "Test")
-    val reports = mutableListOf<ReportResult>()
-    for (j in 1..10) {
-        val start = System.currentTimeMillis()
-        miner.jobCount = j
+    val start = System.currentTimeMillis()
 
-        val nonces = (1 .. COUNT).fold(
-            listOf(miner.mineMultiThreaded(null, "Test 0"))
-        ) { chain: List<Block>, i: Int ->
-            chain + miner.mineMultiThreaded(chain.last(), "Test $i")
-        }.map { it.content.nonce }
-        reports.add(report(start, nonces).copy(threadCount = j))
+    val nonces = (1 .. COUNT).map { i ->
+        miner.mineMultiThreaded(null, "Test").content.nonce
     }
-    println("Thread Count;Average Time;Average Non;Average Nonce per sec")
-    reports.forEach { printReportValues(it) }
+    report(start, nonces)
 }
+
+//fun main() {
+//    miner.mineMultiThreaded(null, "Test")
+//    miner.mineMultiThreaded(null, "Test")
+//    val reports = mutableListOf<ReportResult>()
+//    for (j in 1..10) {
+//        val start = System.currentTimeMillis()
+//        miner.jobCount = j
+//
+//        val nonces = (1 .. COUNT).fold(
+//            listOf(miner.mineMultiThreaded(null, "Test 0"))
+//        ) { chain: List<Block>, i: Int ->
+//            chain + miner.mineMultiThreaded(chain.last(), "Test $i")
+//        }.map { it.content.nonce }
+//        reports.add(report(start, nonces).copy(threadCount = j))
+//    }
+//    println("Thread Count;Average Time;Average Non;Average Nonce per sec")
+//    reports.forEach { printReportValues(it) }
+//}
 
 private data class ReportResult(val avgTime: Double, val avgNonce: Int, val avgNoncePerSec: Int, val threadCount: Int? = null)
 
