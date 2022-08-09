@@ -36,6 +36,7 @@ class BlockChainService(
 
             mineService.verifyAndThrow(lastBlock, block)
             publisher.send(BlockChain(blockChain + block))
+            // test change
             return block
         }
     }
