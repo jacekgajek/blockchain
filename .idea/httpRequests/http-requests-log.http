@@ -1,0 +1,11 @@
+POST http://localhost:8080/api/mine
+Content-Type: application/json
+
+{
+  "data": "hey 8"
+}
+
+<> 2022-08-09T171034.200.html
+
+###
+
